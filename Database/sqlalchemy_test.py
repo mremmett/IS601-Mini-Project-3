@@ -5,36 +5,33 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from pprint import pprint
 
-# Create an engine that stores data in the local directory's
-# sqlalchemy_example.db file.
 engine = create_engine('sqlite:////web/Sqlite-Data/example.db')
+Session = sessionmaker(bind=engine)
 
-# this loads the sqlalchemy base class
 Base = declarative_base()
 
+session = Session()
 
-# Setting up the classes that create the record objects and define the schema
 
-class Person(Base):
-    __tablename__ = 'person'
-    # Here we define columns for the table person
-    # Notice that each column is also a normal Python instance attribute.
+class Customer(Base):
+    __tablename__ = 'customer'
     id = Column(Integer, primary_key=True)
-    name = Column(String(250), nullable=False)
+    first_name = Column(String(250), nullable=False)
+    last_name = Column(String(250), nullable=False)
+    username = Column(String(250), nullable=False)
+    email = Column(String(250), nullable=False)
+    address = Column(String(250), nullable=False)
+    town = Column(String(250), nullable=False)
 
 
 class Address(Base):
     __tablename__ = 'address'
-    # Here we define columns for the table address.
-    # Notice that each column is also a normal Python instance attribute.
     id = Column(Integer, primary_key=True)
     street_name = Column(String(250))
     street_number = Column(String(250))
     post_code = Column(String(250), nullable=False)
-    # creates the field to store the person id
-    person_id = Column(Integer, ForeignKey('person.id'))
-    # creates the relationship between the person and addresses.  backref adds a property to the Person class to retrieve addresses
-    person = relationship("Person", backref="addresses")
+    customer_id = Column(Integer, ForeignKey('customer.id'))
+    person = relationship("Customer", backref="addresses")
 
 
 # Create all tables in the engine. This is equivalent to "Create Table"
@@ -53,23 +50,37 @@ DBSession = sessionmaker(bind=engine)
 # session.rollback()
 session = DBSession()
 
-# Insert a Person in the person table
-new_person1 = Person(name='Keith')
-session.add(new_person1)
+# Insert a customer
+c1 = Customer(first_name='Toby',
+              last_name='Miller',
+              username='tmiller',
+              email='tmiller@example.com',
+              address='1662 Kinney Street',
+              town='Wolfden'
+              )
 
-new_person2 = Person(name='Joe')
-session.add(new_person1)
+c2 = Customer(first_name='Scott',
+              last_name='Harvey',
+              username='scottharvey',
+              email='scottharvey@example.com',
+              address='424 Patterson Street',
+              town='Beckinsdale'
+              )
+c1, c2
 
-new_person3 = Person(name='Steve')
-session.add(new_person1)
+session.add(c1)
+session.add(c2)
+
+c1.id, c2.id
+
 session.commit()
 
 # Insert an Address in the address table using a loop
 
 addresses = [
-    Address(post_code='00001', person=new_person1),
-    Address(post_code='00002', person=new_person2),
-    Address(post_code='00003', person=new_person3),
+   # Address(post_code='00001', person=new_person1),
+   # Address(post_code='00002', person=new_person2),
+   # Address(post_code='00003', person=new_person3),
 ]
 
 # Loop through addresses and commit them to the database
