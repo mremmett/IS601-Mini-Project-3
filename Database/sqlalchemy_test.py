@@ -154,5 +154,179 @@ session.add_all([o3])
 
 session.commit()
 
+session.query(Customer).all()
+
+pprint(session.query(Customer))
+
+q = session.query(Customer).all()
+
+for c in q:
+    pprint(c.id, c.first_name)
+
+
+session.query(Customer.id, Customer.first_name).all()
+
+session.query(Customer).count()
+session.query(Item).count()
+session.query(Order).count()
+
+session.query(Customer).first()
+session.query(Item).first()
+session.query(Order).first()
+
+session.query(Customer).get(1)
+session.query(Item).get(1)
+session.query(Order).get(100)
+
+session.query(Order).filter(Order.date_shipped == None).all()
+
+session.query(Order).filter(Order.date_shipped != None).all()
+
+session.query(Customer).filter(Customer.first_name.in_(['Toby', 'Sarah'])).all()
+
+session.query(Customer).filter(Customer.first_name.notin_(['Toby', 'Sarah'])).all()
+
+session.query(Item).filter(Item.cost_price.between(10, 50)).all()
+
+# session.query(Item).filter(not_(Item.cost_price.between(10, 50))).all()
+
+session.query(Item).filter(Item.name.like("%r")).all()
+session.query(Item).filter(Item.name.ilike("w%")).all()
+
+# session.query(Item).filter(not_(Item.name.like("W%"))).all()
+
+session.query(Customer).limit(2).all()
+session.query(Customer).filter(Customer.address.ilike("%avenue")).limit(2).all()
+
+session.query(Customer).limit(2).offset(2).all()
+
+pprint(session.query(Customer).limit(2).offset(2))
+
+session.query(Item).filter(Item.name.ilike("wa%")).all()
+session.query(Item).filter(Item.name.ilike("wa%")).order_by(Item.cost_price).all()
+
+# session.query(Item).filter(Item.name.ilike("wa%")).order_by(desc(Item.cost_price)).all()
+
+session.query(Customer).join(Order).all()
+
+pprint(session.query(Customer).join(Order))
+
+session.query(Customer.id, Customer.username, Order.id).join(Order).all()
+
+session.query(Customer).join(Item).join(Order).join(OrderLine).all()
+
+session.query(
+    Customer.first_name,
+    Item.name,
+    Item.selling_price,
+    OrderLine.quantity
+).join(Order).join(OrderLine).join(Item).filter(
+    Customer.first_name == 'John',
+    Customer.last_name == 'Green',
+    Order.id == 1,
+).all()
+
+session.query(
+    Customer.first_name,
+    Order.id,
+).outerjoin(Order).all()
+session.query(
+    Customer.first_name,
+    Order.id,
+).outerjoin(Order, full=True).all()
+
+from sqlalchemy import func
+
+session.query(func.count(Customer.id)).join(Order).filter(
+    Customer.first_name == 'John',
+    Customer.last_name == 'Green',
+).group_by(Customer.id).scalar()
+
+session.query(
+    func.count("*").label('town_count'),
+    Customer.town
+).group_by(Customer.town).having(func.count("*") > 2).all()
+
+from sqlalchemy import distinct
+
+session.query(Customer.town).filter(Customer.id < 10).all()
+session.query(Customer.town).filter(Customer.id < 10).distinct().all()
+
+session.query(
+    func.count(distinct(Customer.town)),
+    func.count(Customer.town)
+).all()
+
+from sqlalchemy import cast, Date, distinct, union
+
+session.query(
+    cast(func.pi(), Integer),
+    cast(func.pi(), Numeric(10, 2)),
+    cast("2010-12-01", DateTime),
+    cast("2010-12-01", Date),
+).all()
+
+s1 = session.query(Item.id, Item.name).filter(Item.name.like("Wa%"))
+s2 = session.query(Item.id, Item.name).filter(Item.name.like("%e%"))
+s1.union(s2).all()
+
+s1.union_all(s2).all()
+
+session.query(Item).filter(
+    Item.name.ilike("W%")
+).update({"quantity": 60}, synchronize_session='fetch')
+session.commit()
+
+session.query(Item).filter(
+    Item.name.ilike("W%")
+).delete(synchronize_session='fetch')
+session.commit()
+
+from sqlalchemy import text
+
+session.query(Customer).filter(text("first_name = 'John'")).all()
+
+session.query(Customer).filter(text("town like 'Nor%'")).all()
+
+session.query(Customer).filter(text("town like 'Nor%'")).order_by(text("first_name, id desc")).all()
+
+from sqlalchemy import update
+from sqlalchemy.exc import IntegrityError
+from datetime import datetime
+
+def dispatch_order(order_id):
+    # check whether order_id is valid or not
+    order = session.query(Order).get(order_id)
+
+    if not order:
+        raise ValueError("Invalid order id: {}.".format(order_id))
+
+    if order.date_shipped:
+        pprint("Order already shipped.")
+        return
+
+    try:
+        for i in order.order_lines:
+            i.item.quantity = i.item.quantity - i.quantity
+
+        order.date_shipped = datetime.now()
+        session.commit()
+        pprint("Transaction completed.")
+
+    except IntegrityError as e:
+        pprint(e)
+        pprint("Rolling back ...")
+        session.rollback()
+        pprint("Transaction failed.")
+
+dispatch_order(1)
+dispatch_order(2)
+
+session.query(Customer).filter(and_(
+    Customer.first_name == 'John',
+    not_(
+        Customer.town == 'Peterbrugh',
+    )
+)).all()
 
 
