@@ -188,12 +188,12 @@ session.query(Customer).filter(Customer.first_name.notin_(['Toby', 'Sarah'])).al
 
 session.query(Item).filter(Item.cost_price.between(10, 50)).all()
 
-# session.query(Item).filter(not_(Item.cost_price.between(10, 50))).all()
+session.query(Item).filter(not_(Item.cost_price.between(10, 50))).all()
 
 session.query(Item).filter(Item.name.like("%r")).all()
 session.query(Item).filter(Item.name.ilike("w%")).all()
 
-# session.query(Item).filter(not_(Item.name.like("W%"))).all()
+session.query(Item).filter(not_(Item.name.like("W%"))).all()
 
 session.query(Customer).limit(2).all()
 session.query(Customer).filter(Customer.address.ilike("%avenue")).limit(2).all()
@@ -205,7 +205,7 @@ pprint(session.query(Customer).limit(2).offset(2))
 session.query(Item).filter(Item.name.ilike("wa%")).all()
 session.query(Item).filter(Item.name.ilike("wa%")).order_by(Item.cost_price).all()
 
-# session.query(Item).filter(Item.name.ilike("wa%")).order_by(desc(Item.cost_price)).all()
+session.query(Item).filter(Item.name.ilike("wa%")).order_by(desc(Item.cost_price)).all()
 
 session.query(Customer).join(Order).all()
 
