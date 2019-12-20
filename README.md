@@ -1,42 +1,11 @@
 [![Build Status](https://travis-ci.com/yk273/IS601-Mini-Project-2.svg?branch=master)](https://travis-ci.com/yk273/IS601-Mini-Project-2)
 
 
-# IS601-Mini-Project-2
+# IS601-Mini-Project-3
 
-### Group Members
-* Yana Kokit
-* Michelle Remmett
-
-### Mini Project 1 Update
-
-[Mini Project 1 Link](https://github.com/yk273/IS601-Mini-Project-1.git)
+### Michelle Remmett
 
 ### Project Description
-Create a statistical calculator with the following functions:
-- [x] Population Mean
-- [x] Median
-- [x] Mode
-- [x] Population Standard Deviation
-- [x] Variance of population proportion
-- [x] Z-Score
-- [x] Standardized score (same as Z-score **OMITTED**)
-- [x] Population Correlation Coefficient
-- [x] Confidence Interval
-- [x] Population Variance
-- [x] P Value
-- [x] Proportion
-- [x] Sample Mean
-- [x] Sample Standard Deviation
-- [x] Variance of sample proportion
+Follow the tutorial below:
 
-### Requirements
-- [x] You must submit a link to your Github for Mini Project 1 (updated terms) and 2 (statistical calculator)
-- [x] You must submit a link to Travis CI running your tests successfully
-- [x] You must put a travis CI build status on your Readme.MD file
-- [x] You must have commits labeled feature, fix, or task
-- [x] You must not repeat yourself
-- [x] You need a module for reading CSV files
-- [x] You need a module for statistics
-- [x] You need a module for calculator
-- [x] You need to throw exceptions when there is a problem such as file not found.
-- [x] You must have tests for you calculator, statistics, and CSV file reading modules.   
+https://overiq.com/sqlalchemy-101/crud-using-sqlalchemy-orm/ (Links to an external site.)
