@@ -5,36 +5,45 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from pprint import pprint
 
-# Create an engine that stores data in the local directory's
-# sqlalchemy_example.db file.
 engine = create_engine('sqlite:////web/Sqlite-Data/example.db')
+Session = sessionmaker(bind=engine)
 
-# this loads the sqlalchemy base class
 Base = declarative_base()
 
+session = Session()
 
-# Setting up the classes that create the record objects and define the schema
 
-class Person(Base):
-    __tablename__ = 'person'
-    # Here we define columns for the table person
-    # Notice that each column is also a normal Python instance attribute.
+class Customer(Base):
+    __tablename__ = 'customer'
+    id = Column(Integer, primary_key=True)
+    first_name = Column(String(250), nullable=False)
+    last_name = Column(String(250), nullable=False)
+    username = Column(String(250), nullable=False)
+    email = Column(String(250), nullable=False)
+    address = Column(String(250), nullable=False)
+    town = Column(String(250), nullable=False)
+
+
+class Item(Base):
+    __tablename__ = 'item'
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
+    cost_price = Column(Integer, nullable=False)
+    selling_price = Column(Integer, nullable=False)
+    quantity = Column(Integer, nullable=False)
 
-
-class Address(Base):
-    __tablename__ = 'address'
-    # Here we define columns for the table address.
-    # Notice that each column is also a normal Python instance attribute.
+class Order(Base):
+    __tablename__ = 'order'
     id = Column(Integer, primary_key=True)
-    street_name = Column(String(250))
-    street_number = Column(String(250))
-    post_code = Column(String(250), nullable=False)
-    # creates the field to store the person id
-    person_id = Column(Integer, ForeignKey('person.id'))
-    # creates the relationship between the person and addresses.  backref adds a property to the Person class to retrieve addresses
-    person = relationship("Person", backref="addresses")
+    customer_id = Column(Integer, ForeignKey('customer.id'))
+    line_items = relationship("OrderLine", backref='order')
+
+class OrderLine(Base):
+    __tablename__ = 'orderline'
+    id = Column(Integer, primary_key=True)
+    order_id = Column(Integer, ForeignKey('order.id'))
+    item_id = Column(Integer, ForeignKey('item.id'))
+    quantity = Column(Integer)
 
 
 # Create all tables in the engine. This is equivalent to "Create Table"
@@ -44,52 +53,280 @@ Base.metadata.create_all(engine)
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
-# A DBSession() instance establishes all conversations with the database
-# and represents a "staging zone" for all the objects loaded into the
-# database session object. Any change made against the objects in the
-# session won't be persisted into the database until you call
-# session.commit(). If you're not happy about the changes, you can
-# revert all of them back to the last commit by calling
-# session.rollback()
+
 session = DBSession()
 
-# Insert a Person in the person table
-new_person1 = Person(name='Keith')
-session.add(new_person1)
 
-new_person2 = Person(name='Joe')
-session.add(new_person1)
+c1 = Customer(first_name='Toby',
+              last_name='Miller',
+              username='tmiller',
+              email='tmiller@example.com',
+              address='1662 Kinney Street',
+              town='Wolfden'
+              )
 
-new_person3 = Person(name='Steve')
-session.add(new_person1)
+c2 = Customer(first_name='Scott',
+              last_name='Harvey',
+              username='scottharvey',
+              email='scottharvey@example.com',
+              address='424 Patterson Street',
+              town='Beckinsdale'
+              )
+c1, c2
+
+session.add(c1)
+session.add(c2)
+
+c1.id, c2.id
+
 session.commit()
 
-# Insert an Address in the address table using a loop
+c3 = Customer(
+    first_name="John",
+    last_name="Lara",
+    username="johnlara",
+    email="johnlara@mail.com",
+    address="3073 Derek Drive",
+    town="Norfolk"
+)
 
-addresses = [
-    Address(post_code='00001', person=new_person1),
-    Address(post_code='00002', person=new_person2),
-    Address(post_code='00003', person=new_person3),
-]
+c4 = Customer(
+    first_name="Sarah",
+    last_name="Tomlin",
+    username="sarahtomlin",
+    email="sarahtomlin@mail.com",
+    address="3572 Poplar Avenue",
+    town="Norfolk"
+)
 
-# Loop through addresses and commit them to the database
-for address in addresses:
-    session.add(address)
-    session.commit()
+c5 = Customer(first_name='Toby',
+              last_name='Miller',
+              username='tmiller',
+              email='tmiller@example.com',
+              address='1662 Kinney Street',
+              town='Wolfden'
+              )
 
-# joins Person on Address
-all_people = session.query(Person).join(Address).all()
+c6 = Customer(first_name='Scott',
+              last_name='Harvey',
+              username='scottharvey',
+              email='scottharvey@example.com',
+              address='424 Patterson Street',
+              town='Beckinsdale'
+              )
 
-# Accessing a person with their address, You have to loop the addresses property and remember it was added by the
-# backref on the addresses class
-for person in all_people:
-    # use the __dict__ magic method to have the object print it's properties
-    pprint(person.__dict__)
-    for address in person.addresses:
-        pprint(address.__dict__)
+session.add_all([c3, c4, c5, c6])
+session.commit()
 
-# Retrieving the inverse of the relationship.  Notice I reverse the Person and Address to load the Address table
-all_addresses = session.query(Address).join(Person).all()
-for address in all_addresses:
-    # showing how to use the print function with printing text and data at the same time easily
-    print(f'{address.person.name} has a postal code of {address.post_code}')
+i1 = Item(name='Chair', cost_price=9.21, selling_price=10.81, quantity=5)
+i2 = Item(name='Pen', cost_price=3.45, selling_price=4.51, quantity=3)
+i3 = Item(name='Headphone', cost_price=15.52, selling_price=16.81, quantity=50)
+i4 = Item(name='Travel Bag', cost_price=20.1, selling_price=24.21, quantity=50)
+i5 = Item(name='Keyboard', cost_price=20.1, selling_price=22.11, quantity=50)
+i6 = Item(name='Monitor', cost_price=200.14, selling_price=212.89, quantity=50)
+i7 = Item(name='Watch', cost_price=100.58, selling_price=104.41, quantity=50)
+i8 = Item(name='Water Bottle', cost_price=20.89, selling_price=25, quantity=50)
+
+session.add_all([i1, i2, i3, i4, i5, i6, i7, i8])
+session.commit()
+
+o1 = Order(customer=c1)
+o2 = Order(customer=c1)
+
+line_item1 = OrderLine(order=o1, item=i1, quantity=3)
+line_item2 = OrderLine(order=o1, item=i2, quantity=2)
+line_item3 = OrderLine(order=o2, item=i1, quantity=1)
+line_item3 = OrderLine(order=o2, item=i2, quantity=4)
+
+session.add_all([o1, o2])
+
+session.new
+session.commit()
+
+o3 = Order(customer=c1)
+orderline1 = OrderLine(item=i1, quantity=5)
+orderline2 = OrderLine(item=i2, quantity=10)
+
+o3.order_lines.append(orderline1)
+o3.order_lines.append(orderline2)
+
+session.add_all([o3])
+
+session.commit()
+
+session.query(Customer).all()
+
+pprint(session.query(Customer))
+
+q = session.query(Customer).all()
+
+for c in q:
+    pprint(c.id, c.first_name)
+
+
+session.query(Customer.id, Customer.first_name).all()
+
+session.query(Customer).count()
+session.query(Item).count()
+session.query(Order).count()
+
+session.query(Customer).first()
+session.query(Item).first()
+session.query(Order).first()
+
+session.query(Customer).get(1)
+session.query(Item).get(1)
+session.query(Order).get(100)
+
+session.query(Order).filter(Order.date_shipped == None).all()
+
+session.query(Order).filter(Order.date_shipped != None).all()
+
+session.query(Customer).filter(Customer.first_name.in_(['Toby', 'Sarah'])).all()
+
+session.query(Customer).filter(Customer.first_name.notin_(['Toby', 'Sarah'])).all()
+
+session.query(Item).filter(Item.cost_price.between(10, 50)).all()
+
+session.query(Item).filter(not_(Item.cost_price.between(10, 50))).all()
+
+session.query(Item).filter(Item.name.like("%r")).all()
+session.query(Item).filter(Item.name.ilike("w%")).all()
+
+session.query(Item).filter(not_(Item.name.like("W%"))).all()
+
+session.query(Customer).limit(2).all()
+session.query(Customer).filter(Customer.address.ilike("%avenue")).limit(2).all()
+
+session.query(Customer).limit(2).offset(2).all()
+
+pprint(session.query(Customer).limit(2).offset(2))
+
+session.query(Item).filter(Item.name.ilike("wa%")).all()
+session.query(Item).filter(Item.name.ilike("wa%")).order_by(Item.cost_price).all()
+
+session.query(Item).filter(Item.name.ilike("wa%")).order_by(desc(Item.cost_price)).all()
+
+session.query(Customer).join(Order).all()
+
+pprint(session.query(Customer).join(Order))
+
+session.query(Customer.id, Customer.username, Order.id).join(Order).all()
+
+session.query(Customer).join(Item).join(Order).join(OrderLine).all()
+
+session.query(
+    Customer.first_name,
+    Item.name,
+    Item.selling_price,
+    OrderLine.quantity
+).join(Order).join(OrderLine).join(Item).filter(
+    Customer.first_name == 'John',
+    Customer.last_name == 'Green',
+    Order.id == 1,
+).all()
+
+session.query(
+    Customer.first_name,
+    Order.id,
+).outerjoin(Order).all()
+session.query(
+    Customer.first_name,
+    Order.id,
+).outerjoin(Order, full=True).all()
+
+from sqlalchemy import func
+
+session.query(func.count(Customer.id)).join(Order).filter(
+    Customer.first_name == 'John',
+    Customer.last_name == 'Green',
+).group_by(Customer.id).scalar()
+
+session.query(
+    func.count("*").label('town_count'),
+    Customer.town
+).group_by(Customer.town).having(func.count("*") > 2).all()
+
+from sqlalchemy import distinct
+
+session.query(Customer.town).filter(Customer.id < 10).all()
+session.query(Customer.town).filter(Customer.id < 10).distinct().all()
+
+session.query(
+    func.count(distinct(Customer.town)),
+    func.count(Customer.town)
+).all()
+
+from sqlalchemy import cast, Date, distinct, union
+
+session.query(
+    cast(func.pi(), Integer),
+    cast(func.pi(), Numeric(10, 2)),
+    cast("2010-12-01", DateTime),
+    cast("2010-12-01", Date),
+).all()
+
+s1 = session.query(Item.id, Item.name).filter(Item.name.like("Wa%"))
+s2 = session.query(Item.id, Item.name).filter(Item.name.like("%e%"))
+s1.union(s2).all()
+
+s1.union_all(s2).all()
+
+session.query(Item).filter(
+    Item.name.ilike("W%")
+).update({"quantity": 60}, synchronize_session='fetch')
+session.commit()
+
+session.query(Item).filter(
+    Item.name.ilike("W%")
+).delete(synchronize_session='fetch')
+session.commit()
+
+from sqlalchemy import text
+
+session.query(Customer).filter(text("first_name = 'John'")).all()
+
+session.query(Customer).filter(text("town like 'Nor%'")).all()
+
+session.query(Customer).filter(text("town like 'Nor%'")).order_by(text("first_name, id desc")).all()
+
+from sqlalchemy import update
+from sqlalchemy.exc import IntegrityError
+from datetime import datetime
+
+def dispatch_order(order_id):
+    # check whether order_id is valid or not
+    order = session.query(Order).get(order_id)
+
+    if not order:
+        raise ValueError("Invalid order id: {}.".format(order_id))
+
+    if order.date_shipped:
+        pprint("Order already shipped.")
+        return
+
+    try:
+        for i in order.order_lines:
+            i.item.quantity = i.item.quantity - i.quantity
+
+        order.date_shipped = datetime.now()
+        session.commit()
+        pprint("Transaction completed.")
+
+    except IntegrityError as e:
+        pprint(e)
+        pprint("Rolling back ...")
+        session.rollback()
+        pprint("Transaction failed.")
+
+dispatch_order(1)
+dispatch_order(2)
+
+session.query(Customer).filter(and_(
+    Customer.first_name == 'John',
+    not_(
+        Customer.town == 'Peterbrugh',
+    )
+)).all()
+
+
